@@ -1,0 +1,12 @@
+name: Arbiter
+version: '1.0'
+main: com.Manxlatic.arbiter.Arbiter
+api-version: '1.20'
+commands:
+  gms:
+  gmc:
+  freeze:
+    usage: "/Freeze <Player>"
+  unfreeze:
+    usage: "/Unfreeze <Player>"
+  speed:
