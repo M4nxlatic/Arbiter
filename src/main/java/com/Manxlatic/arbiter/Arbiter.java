@@ -19,10 +19,12 @@ public final class Arbiter extends JavaPlugin {
         getCommand("freeze").setExecutor(new FreezeCommand(this));
         getCommand("unfreeze").setExecutor(new UnFreezeCommand(this));
         getCommand("speed").setExecutor(new SpeedCommand());
+        getCommand("invsee").setExecutor(new InvSeeCommand());
 
 
 
         getServer().getPluginManager().registerEvents(new FreezeCommand(this), this);
+        getServer().getPluginManager().registerEvents(new InvSeeCommand(), this);
     }
 
     public List<UUID> getFrozenPlayers() {

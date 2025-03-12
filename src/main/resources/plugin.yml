@@ -10,3 +10,5 @@ commands:
   unfreeze:
     usage: "/Unfreeze <Player>"
   speed:
+  invsee:
+
