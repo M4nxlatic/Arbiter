@@ -19,10 +19,18 @@ public class UnFreezeCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         if (args.length != 1) {
             sender.sendMessage("Usage: /unfreeze <player>");
+            return false;
         }
         Player player = (Player) sender;
-        player.sendMessage(ChatColor.GREEN + "Player has been frozen");
-        arbiter.getFrozenPlayers().add(player);
-        return false;
+        Player target = sender.getServer().getPlayer(args[0]);
+
+        if (!arbiter.getFrozenPlayers().contains(target.getUniqueId())) {
+            player.sendMessage(ChatColor.RED  + "Player is not frozen");
+            return false;
+        }
+
+        player.sendMessage(ChatColor.GREEN + "Player has been unfrozen");
+        arbiter.getFrozenPlayers().remove(target.getUniqueId());
+        return true;
     }
 }

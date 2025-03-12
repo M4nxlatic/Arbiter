@@ -13,10 +13,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class FreezeCommand implements CommandExecutor, Listener {
-
-    public List<Player> frozen = new ArrayList<>();
 
     private Arbiter arbiter;
 
@@ -32,17 +31,15 @@ public class FreezeCommand implements CommandExecutor, Listener {
         }
         Player player = (Player) sender;
         player.sendMessage(ChatColor.GREEN + "Player has been frozen");
-        arbiter.getFrozenPlayers().add(player);
+        arbiter.getFrozenPlayers().add(player.getUniqueId());
         System.out.println(arbiter.getFrozenPlayers());
-        return false;
+        return true;
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        for (int i = 0; i < frozen.size(); i++) {
-            if (frozen.get(i).equals(event.getPlayer())) {
-                event.setCancelled(true);
-            }
+        if (arbiter.getFrozenPlayers().contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 }

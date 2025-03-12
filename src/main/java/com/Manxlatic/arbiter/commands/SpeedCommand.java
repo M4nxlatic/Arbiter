@@ -12,22 +12,25 @@ public class SpeedCommand implements CommandExecutor {
 
         if (!(sender instanceof Player)) {
             System.err.println("This Command can only ber used by a player.");
+            return false;
         }
 
         Player player = (Player) sender;
         if (args.length != 1) {
             player.sendMessage("Usage: /speed <speed>");
+            return false;
         }
 
 
         if (Float.parseFloat(args[0]) > 10 || Float.parseFloat(args[0]) < -1) {
             player.sendMessage("Please use a value between -1 and 1");
+            return false;
         }
 
 
         player.setWalkSpeed(Float.parseFloat(args[0]));
         player.setFlySpeed(Float.parseFloat(args[0]));
         player.sendMessage(ChatColor.GREEN + "Speed set to" + args[0]);
-        return false;
+        return true;
     }
 }
