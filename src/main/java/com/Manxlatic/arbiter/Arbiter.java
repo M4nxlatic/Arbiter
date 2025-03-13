@@ -1,5 +1,6 @@
 package com.Manxlatic.arbiter;
 
+import com.Manxlatic.arbiter.Managers.ConfigManager;
 import com.Manxlatic.arbiter.commands.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,11 +21,13 @@ public final class Arbiter extends JavaPlugin {
         getCommand("unfreeze").setExecutor(new UnFreezeCommand(this));
         getCommand("speed").setExecutor(new SpeedCommand());
         getCommand("invsee").setExecutor(new InvSeeCommand());
+        getCommand("editinv").setExecutor(new EditInventoryCommand());
 
 
 
         getServer().getPluginManager().registerEvents(new FreezeCommand(this), this);
         getServer().getPluginManager().registerEvents(new InvSeeCommand(), this);
+        getServer().getPluginManager().registerEvents(new EditInventoryCommand(), this);
     }
 
     public List<UUID> getFrozenPlayers() {
@@ -34,5 +37,9 @@ public final class Arbiter extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    public ConfigManager getConfigManager() {
+        return new ConfigManager(this);
     }
 }

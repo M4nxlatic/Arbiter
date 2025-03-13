@@ -1,7 +1,6 @@
 package com.Manxlatic.arbiter.commands;
 
-import com.Manxlatic.arbiter.CustomInventoryBuilder;
-import org.bukkit.Bukkit;
+import com.Manxlatic.arbiter.Managers.CustomInventoryBuilder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -33,7 +32,7 @@ public class InvSeeCommand implements CommandExecutor, Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().endsWith("'s Inventory")) { // Custom inventory check
+        if (event.getView().getTitle().endsWith("'s Inventory") && !event.getView().getTitle().startsWith("Editing")) { // Custom inventory check
             event.setCancelled(true); // Cancel clicks in this inventory
         }
     }

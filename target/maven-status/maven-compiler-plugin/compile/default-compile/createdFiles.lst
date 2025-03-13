@@ -1,6 +1,7 @@
 com\Manxlatic\arbiter\commands\GmcCommand.class
 com\Manxlatic\arbiter\commands\FreezeCommand.class
 com\Manxlatic\arbiter\commands\InvSeeCommand.class
+com\Manxlatic\arbiter\commands\EditInventoryCommand.class
 com\Manxlatic\arbiter\commands\GmsCommand.class
 com\Manxlatic\arbiter\Arbiter.class
 com\Manxlatic\arbiter\commands\SpeedCommand.class
