@@ -12,6 +12,7 @@ public class ConfigManager {
     private final Properties configProperties;
 
     public ConfigManager(JavaPlugin plugin) {
+        //System.out.println("ConfigManager called from: " + Thread.currentThread().getStackTrace()[2]);
         // Define the config file location within the plugin's data folder
         configFile = new File(plugin.getDataFolder(), "config.properties");
 
@@ -33,18 +34,22 @@ public class ConfigManager {
             }
         }
 
-        // Load existing configurations from the file
         loadConfig();
     }
 
     private void createDefaultConfig() {
-        configProperties.setProperty("botToken", "your-bot-token-here");
-        configProperties.setProperty("channelId1", "000000000000000000");
-        configProperties.setProperty("channelId2", "000000000000000000");
+        configProperties.setProperty("bot_token", "your-bot-token-here");
+        configProperties.setProperty("staff_logging_channel_id", "000000000000000000");
+        configProperties.setProperty("bridge_channel_id", "000000000000000000");
+        configProperties.setProperty("log_channel_id", "000000000000000000");
+        configProperties.setProperty("server_id", "000000000000000000");
+        configProperties.setProperty("voice_status_channel_id", "000000000000000000");
+        configProperties.setProperty("webhook_id", "your_webhook_id_here");
         saveConfig();
     }
 
     public void loadConfig() {
+        //System.out.println("loadConfig called from: " + Thread.currentThread().getStackTrace()[2]);
         try (FileInputStream input = new FileInputStream(configFile)) {
             configProperties.load(input);
             System.out.println("Config loaded successfully.");

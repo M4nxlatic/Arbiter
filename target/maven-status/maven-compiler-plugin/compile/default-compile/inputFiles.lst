@@ -1,4 +1,12 @@
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Arbiter.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\BotClass.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\ConsoleInjector.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\DiscordListener.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\JDADiscordService.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\MessageLogger.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\MinecraftListener.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\SlashCommandListener.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Bot\TempBanRecord.java
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\EditInventoryCommand.java
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\FreezeCommand.java
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\GmcCommand.java
@@ -6,4 +14,13 @@ C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\InvSeeCommand.java
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\SpeedCommand.java
 C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\commands\UnFreezeCommand.java
-C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\CustomInventoryBuilder.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Managers\ConfigManager.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Managers\CustomInventoryBuilder.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Managers\DbManager.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\BanCommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\MuteCommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\PunishmentGUICommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\TempBanCommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\TempMuteCommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\unbanCommand.java
+C:\Users\camer\IdeaProjects\Arbiter\src\main\java\com\Manxlatic\arbiter\Punishment\unmuteCommand.java

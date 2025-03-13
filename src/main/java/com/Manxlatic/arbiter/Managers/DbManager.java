@@ -5,7 +5,10 @@ import com.Manxlatic.arbiter.Bot.TempBanRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.plugin.Plugin;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -16,14 +19,88 @@ import java.util.*;
 
 public class DbManager {
 
+    private final File configFile;
     private final Arbiter arbiter;
     private static String username = "root";
     private static String password = "";
 
-    private static String url1 = "jdbc:mysql://localhost:3306/bot";
+    private static String url1 = "jdbc:mysql://localhost:3306/punishments";
 
-    public DbManager(Arbiter arbiter) {
+    public DbManager(Arbiter arbiter) throws IOException {
         this.arbiter = arbiter;
+
+        configFile = new File(arbiter.getDataFolder(), "punishments.db");
+
+        // Load the configuration. If the file doesn't exist, create a default one.
+        if (!configFile.exists()) {
+            if (configFile.createNewFile()) {
+                System.out.println("Created default config.properties file.");
+                createTablesIfNotExist();
+            }
+        }
+
+
+    }
+
+    public void createTablesIfNotExist() {
+        String infractionsTable = "CREATE TABLE IF NOT EXISTS infractions (" +
+                "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
+                "user_id VARCHAR(255) NOT NULL, " +
+                "type VARCHAR(50) NOT NULL, " +
+                "timestamp DATETIME NOT NULL" +
+                ");";
+
+        String usersTable = "CREATE TABLE IF NOT EXISTS users (" +
+                "user_id BIGINT PRIMARY KEY, " +
+                "username VARCHAR(255) NOT NULL" +
+                ");";
+
+        String tempBansTable = "CREATE TABLE IF NOT EXISTS temp_bans (" +
+                "user_id VARCHAR(255) PRIMARY KEY, " +
+                "unban_time DATETIME NOT NULL" +
+                ");";
+
+        String punishmentsTable = "CREATE TABLE IF NOT EXISTS punishments (" +
+                "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
+                "playerid VARCHAR(255) NOT NULL, " +
+                "type VARCHAR(50) NOT NULL, " +
+                "end_time DATETIME" +
+                ");";
+
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            // Load the MySQL driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Establish the connection
+            connection = DriverManager.getConnection(url1, username, password);
+            statement = connection.createStatement();
+
+            // Execute the CREATE TABLE queries
+            statement.execute(infractionsTable);
+            statement.execute(usersTable);
+            statement.execute(tempBansTable);
+            statement.execute(punishmentsTable);
+
+            System.out.println("Tables created or verified successfully.");
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create tables", e);
+        } finally {
+            // Close resources in the finally block
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // Record an infraction with an expiration timestamp

@@ -40,11 +40,11 @@ public class BotClass {
 
     private ConsoleInjector consoleInjector;
 
-    private final SlashCommandListener slashCommandListener;
 
-    public BotClass(Arbiter arbiter, SlashCommandListener slashCommandListener) {
+
+    public BotClass(Arbiter arbiter) {
         this.arbiter = arbiter;
-        this.slashCommandListener = slashCommandListener;
+
     }
 
     public Boolean start() {
@@ -56,6 +56,11 @@ public class BotClass {
 
 
         String botToken = configManager.getProperty("bot_token");
+
+        if (botToken == null) {
+            System.out.println("Token is null");
+        }
+
         try {
             builder = JDABuilder.createDefault(botToken);
             builder.addEventListeners(new SlashCommandListener(new DbManager(arbiter), this, arbiter));
@@ -246,9 +251,7 @@ public class BotClass {
                     return;
                 }
             } else {
-                // Handle direct messages if necessary
-                System.out.println("Message is from a direct message");
-                // Optionally, handle direct messages here
+                return;
             }
         }
 
@@ -360,6 +363,10 @@ public class BotClass {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        public BotClass getBotClass() {
+            return BotClass.this;
         }
 
     }

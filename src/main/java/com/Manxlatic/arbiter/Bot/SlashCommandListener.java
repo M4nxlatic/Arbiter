@@ -40,7 +40,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
     public BotClass getInstance() {
         if (instance == null) {
-            instance = new BotClass(arbiter, this);
+            instance = new BotClass(arbiter);
         }
         return instance;
     }
