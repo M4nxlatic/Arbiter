@@ -24,7 +24,7 @@ public class DbManager {
     private static String username = "root";
     private static String password = "";
 
-    private static String url1 = "jdbc:mysql://localhost:3306/punishments";
+    private static String url1 = "jdbc:mysqlite:punishments.db";
 
     public DbManager(Arbiter arbiter) throws IOException {
         this.arbiter = arbiter;
