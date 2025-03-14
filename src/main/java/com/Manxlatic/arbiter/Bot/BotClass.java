@@ -47,6 +47,8 @@ public class BotClass {
 
     }
 
+
+
     public Boolean start() {
         MessageLogger messageLogger = new MessageLogger(this);
 
@@ -175,6 +177,23 @@ public class BotClass {
 
 
         return true;
+    }
+
+    public void stop() {
+        ConfigManager configManager = arbiter.getConfigManager();
+        Guild guild = jda.getGuildById(configManager.getProperty("server_id"));
+        VoiceChannel voiceChannel = guild.getVoiceChannelById(configManager.getProperty("voice_status_channel_id"));
+        if (voiceChannel != null) {
+            voiceChannel.getManager().setName("\uD83D\uDD34 ┃server status").queue();
+        } else {
+            System.err.println("VoiceChannel is null");
+        }
+        TextChannel textChannel = guild.getTextChannelById(configManager.getProperty("bridge_channel_id"));
+        if (textChannel != null) {
+            textChannel.sendMessage("Server has stopped :octagonal_sign:").queue();
+        } else {
+            System.err.println("TextChannel is null");
+        }
     }
 
     public JDA getJda() {

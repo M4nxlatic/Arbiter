@@ -12,7 +12,6 @@ public class ConfigManager {
     private final Properties configProperties;
 
     public ConfigManager(JavaPlugin plugin) {
-        //System.out.println("ConfigManager called from: " + Thread.currentThread().getStackTrace()[2]);
         // Define the config file location within the plugin's data folder
         configFile = new File(plugin.getDataFolder(), "config.properties");
 
@@ -49,10 +48,8 @@ public class ConfigManager {
     }
 
     public void loadConfig() {
-        //System.out.println("loadConfig called from: " + Thread.currentThread().getStackTrace()[2]);
         try (FileInputStream input = new FileInputStream(configFile)) {
             configProperties.load(input);
-            System.out.println("Config loaded successfully.");
         } catch (IOException e) {
             System.err.println("Failed to load config file: " + e.getMessage());
         }
@@ -61,7 +58,6 @@ public class ConfigManager {
     public void saveConfig() {
         try (FileOutputStream output = new FileOutputStream(configFile)) {
             configProperties.store(output, "Minecraft Plugin Configuration File");
-            System.out.println("Config saved successfully.");
         } catch (IOException e) {
             System.err.println("Failed to save config file: " + e.getMessage());
         }

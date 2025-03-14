@@ -6,6 +6,9 @@ import com.Manxlatic.arbiter.Bot.SlashCommandListener;
 import com.Manxlatic.arbiter.Managers.ConfigManager;
 import com.Manxlatic.arbiter.Managers.DbManager;
 import com.Manxlatic.arbiter.commands.*;
+import com.Manxlatic.arbiter.commands.Punishment.*;
+import org.bukkit.BanList;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,10 +16,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class Arbiter extends JavaPlugin {
 
     private List<UUID> frozenPlayers = new ArrayList<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private BotClass botClass;
+    private DbManager dbManager;
 
     @Override
     public void onEnable() {
@@ -31,8 +40,11 @@ public final class Arbiter extends JavaPlugin {
 
         getConfigManager().loadConfig();
 
-        BotClass botClass = new BotClass(this);
+        botClass = new BotClass(this);
         botClass.start();
+
+        dbManager = new DbManager(this);
+
 
 
         getCommand("gmc").setExecutor(new GmcCommand());
@@ -42,19 +54,24 @@ public final class Arbiter extends JavaPlugin {
         getCommand("speed").setExecutor(new SpeedCommand());
         getCommand("invsee").setExecutor(new InvSeeCommand());
         getCommand("editinv").setExecutor(new EditInventoryCommand());
+        getCommand("mute").setExecutor(new MuteCommand(this, dbManager, botClass.getJda()));
+        getCommand("ban").setExecutor(new BanCommand(botClass.getJda(),this, dbManager));
+        getCommand("tempban").setExecutor(new TempBanCommand(botClass.getJda(), this, dbManager));
+        getCommand("tempmute").setExecutor(new TempMuteCommand(dbManager, this, botClass.getJda()));
+        getCommand("unmute").setExecutor(new unmuteCommand(botClass.getJda(), dbManager, this));
+        getCommand("unban").setExecutor(new unbanCommand(botClass.getJda(), this, dbManager));
+        getCommand("punishmentgui").setExecutor(new PunishmentGUICommand());
+
 
 
 
         getServer().getPluginManager().registerEvents(new FreezeCommand(this), this);
         getServer().getPluginManager().registerEvents(new InvSeeCommand(), this);
         getServer().getPluginManager().registerEvents(new EditInventoryCommand(), this);
-        try {
-            getServer().getPluginManager().registerEvents(new MinecraftListener(this, new DbManager(this), botClass.getJda()), this);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getServer().getPluginManager().registerEvents(new MinecraftListener(this, new DbManager(this), botClass.getJda()), this);
 
 
+        startGamePunishmentCheckTask();
     }
 
     public List<UUID> getFrozenPlayers() {
@@ -64,10 +81,69 @@ public final class Arbiter extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        BotClass botClass = new BotClass(this);
+        botClass.stop();
     }
 
     public ConfigManager getConfigManager() {
-        System.out.println("getConfigManager() called from: " + Thread.currentThread().getStackTrace()[2]);
         return new ConfigManager(this);
+    }
+
+    public void startGamePunishmentCheckTask() {
+        // Combine both unban and unmute checks into a single scheduled task
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                checkGameUnbansAndUnmutes();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, 10, TimeUnit.SECONDS); // Runs every 10 seconds
+    }
+
+    private void checkGameUnbansAndUnmutes() {
+        try {
+            // Handle unban cases
+            List<String> unbannedRecords = dbManager.getUnbannedGameUsers();
+            processGameUnbans(unbannedRecords);
+
+            // Handle unmute cases
+            List<String> unmutedRecords = dbManager.getUnmutedGameUsers();
+            processGameUnmutes(unmutedRecords);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processGameUnbans(List<String> unbannedRecords) {
+        BanList banList = Bukkit.getBanList(BanList.Type.NAME);
+        for (String record : unbannedRecords) {
+            try {
+                UUID playerId = UUID.fromString(record);
+                Player player = Bukkit.getPlayer(playerId);
+
+                // Skip null players (player may be offline)
+                if (player == null) {
+                    continue;
+                }
+
+                // Batch-unban player names
+                banList.pardon(player.getName());
+            } catch (IllegalArgumentException | NullPointerException e) {
+                System.err.println("Invalid unban record: " + record);
+            }
+        }
+    }
+
+    private void processGameUnmutes(List<String> unmutedRecords) {
+        for (String record : unmutedRecords) {
+            try {
+                UUID playerId = UUID.fromString(record);
+
+                // Remove temporary mutes from the database (batch operation)
+                dbManager.removeGameTempMutes(playerId.toString());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid unmute record: " + record);
+            }
+        }
     }
 }

@@ -12,3 +12,10 @@ commands:
   speed:
   invsee:
   editinv:
+  mute:
+  ban:
+  tempban:
+  tempmute:
+  unban:
+  unmute:
+  punishmentgui:
