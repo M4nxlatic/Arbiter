@@ -2,6 +2,8 @@ package com.Manxlatic.arbiter.Managers;
 
 import com.Manxlatic.arbiter.Arbiter;
 import com.Manxlatic.arbiter.Bot.TempBanRecord;
+import com.Manxlatic.arbiter.Ranks.Ranks;
+import com.Manxlatic.arbiter.Ranks.StaffRanks;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -70,6 +72,36 @@ public class DbManager {
                 "end_time DATETIME" +
                 ");";
 
+        String rankTable = "CREATE TABLE IF NOT EXISTS rank (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "parentid INTEGER, " +
+                "name TEXT NOT NULL UNIQUE" +
+                ");";
+
+        // SQL to create the `permission` table
+        String permissionTable = "CREATE TABLE IF NOT EXISTS permission (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "rankId INTEGER, " +
+                "description TEXT NOT NULL, " +
+                "FOREIGN KEY(rankId) REFERENCES rank(id)" +
+                ");";
+
+        // SQL to create the `player` table
+        String playerTable = "CREATE TABLE IF NOT EXISTS player (" +
+                "uuid TEXT NOT NULL, " +
+                "rank TEXT NOT NULL, " +
+                "typeId INTEGER NOT NULL, " +
+                "PRIMARY KEY(uuid, typeId)" +
+                ");";
+
+        // SQL to create the `usersecrets` table
+        String userSecretsTable = "CREATE TABLE IF NOT EXISTS usersecrets (" +
+                "uuid TEXT PRIMARY KEY NOT NULL" +
+                ");";
+
+        String disabledScoreboards = "CREATE TABLE IF NOT EXISTS disabled_scoreboards (" +
+                "uuid TEXT PRIMARY KEY)";
+
         Connection connection = null;
         Statement statement = null;
 
@@ -86,6 +118,11 @@ public class DbManager {
             statement.execute(usersTable);
             statement.execute(tempBansTable);
             statement.execute(punishmentsTable);
+            statement.execute(rankTable);
+            statement.execute(permissionTable);
+            statement.execute(playerTable);
+            statement.execute(userSecretsTable);
+            statement.execute(disabledScoreboards);
 
             System.out.println("Tables created or verified successfully.");
         } catch (SQLException | ClassNotFoundException e) {
@@ -661,6 +698,252 @@ public class DbManager {
             System.err.println("An error occurred while removing ban for user: " + playerId);
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<String> GetPermissions(String Rank) {
+        ArrayList<String> result = new ArrayList<>();
+        String sqlCommand = "WITH RECURSIVE ParentHierarchy AS ("
+                + "  SELECT r.id, r.parentid, r.name "
+                + "  FROM rank r "
+                + "  WHERE r.name = ? "
+                + "  UNION ALL "
+                + "  SELECT t.id, t.parentid, t.name "
+                + "  FROM rank t "
+                + "    INNER JOIN ParentHierarchy p ON t.id = p.parentid "
+                + ") "
+                + "SELECT pe.description FROM ParentHierarchy ph "
+                + "INNER JOIN permission pe ON ph.id = pe.rankId;";
+
+        try (Connection connection = DriverManager.getConnection(url1);
+             PreparedStatement statement = connection.prepareStatement(sqlCommand)) {
+
+            statement.setString(1, Rank.toUpperCase());
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                result.add(resultSet.getString("description"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+
+    public void Setrank(boolean staffrank, UUID playerId, String Rank) {
+        String deleteQuery = "DELETE FROM player WHERE uuid = ? AND typeId = ?";
+        String insertQuery = "INSERT INTO player (uuid, rank, typeId) VALUES (?, ?, ?)";
+
+        try (Connection connection = DriverManager.getConnection(url1);
+             PreparedStatement deleteStmt = connection.prepareStatement(deleteQuery);
+             PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
+
+            // Determine the typeId (1 = normal rank, 2 = staff rank)
+            int typeId = staffrank ? 2 : 1;
+
+            // Delete existing rank for this typeId
+            deleteStmt.setString(1, playerId.toString());
+            deleteStmt.setInt(2, typeId);
+            deleteStmt.executeUpdate();
+
+            // Insert new rank
+            insertStmt.setString(1, playerId.toString());
+            insertStmt.setString(2, Rank);
+            insertStmt.setInt(3, typeId);
+            insertStmt.executeUpdate();
+
+            // Update Bukkit permissions if player is online
+            if (Bukkit.getOfflinePlayer(playerId).isOnline()) {
+                Player player = Bukkit.getPlayer(playerId);
+                PermissionAttachment attachment;
+
+                if (staffrank) {
+                    // Staff permissions
+                    if (arbiter.getRankManager().getStaffPerms().containsKey(playerId)) {
+                        attachment = arbiter.getRankManager().getStaffPerms().get(playerId);
+                    } else {
+                        attachment = player.addAttachment(arbiter);
+                        arbiter.getRankManager().getStaffPerms().put(playerId, attachment);
+                    }
+
+                    for (String staffPerm : GetStaffRank(playerId).getStaffPermissions()) {
+                        if (player.hasPermission(staffPerm)) {
+                            attachment.unsetPermission(staffPerm);
+                        }
+                    }
+                    for (String staffPerm : GetStaffRank(playerId).getStaffPermissions()) {
+                        attachment.setPermission(staffPerm, true);
+                    }
+
+                } else {
+                    // Normal player permissions
+                    if (arbiter.getRankManager().getPerms().containsKey(playerId)) {
+                        attachment = arbiter.getRankManager().getPerms().get(playerId);
+                    } else {
+                        attachment = player.addAttachment(arbiter);
+                        arbiter.getRankManager().getPerms().put(playerId, attachment);
+                    }
+
+                    for (String perm : GetRank(playerId).getPermissions()) {
+                        if (player.hasPermission(perm)) {
+                            attachment.unsetPermission(perm);
+                        }
+                    }
+                    for (String perm : GetRank(playerId).getPermissions()) {
+                        attachment.setPermission(perm, true);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public Ranks GetRank(UUID playerId) {
+        String query = "SELECT rank FROM player WHERE uuid = ? AND typeId = 1";
+        String result = null;
+
+        try (Connection connection = DriverManager.getConnection(url1);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, playerId.toString());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                result = resultSet.getString("rank");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result != null ? Ranks.valueOf(result) : null;
+    }
+
+
+
+    public StaffRanks GetStaffRank(UUID playerId) {
+        String query = "SELECT rank FROM player WHERE uuid = ? AND typeId = 2";
+        String result = null;
+
+        try (Connection connection = DriverManager.getConnection(url1);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, playerId.toString());
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                result = resultSet.getString("rank");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result != null ? StaffRanks.valueOf(result) : null;
+    }
+
+
+    /*public void RemoveSetupPlayers(UUID playerId) {
+        Connection connection = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Open a connection
+            connection = DriverManager.getConnection(url1);
+
+            Statement statement = connection.createStatement();
+
+            String sqlCommand = "DELETE FROM usersecrets WHERE uuid = '" + playerId + "'";
+            statement.execute(sqlCommand);
+
+
+        } catch (SQLException e) {
+            // Handle SQL exceptions
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            // Handle missing JDBC driver exception
+            e.printStackTrace();
+        } finally {
+            // Finally block to close resources
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }*/
+
+    public void addDisabledScoreboard(UUID uuid) {
+        String sql = "INSERT OR IGNORE INTO disabled_scoreboards (uuid) VALUES (?)";
+
+        try (Connection conn = DriverManager.getConnection(url1);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, uuid.toString());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Remove a player's UUID when they enable the sidebar again
+    public void removeDisabledScoreboard(UUID uuid) {
+        String sql = "DELETE FROM disabled_scoreboards WHERE uuid = ?";
+
+        try (Connection conn = DriverManager.getConnection(url1);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, uuid.toString());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Check if a player has disabled the sidebar
+    public boolean isScoreboardDisabled(UUID uuid) {
+        String sql = "SELECT 1 FROM disabled_scoreboards WHERE uuid = ?";
+
+        try (Connection conn = DriverManager.getConnection(url1);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, uuid.toString());
+            ResultSet rs = pstmt.executeQuery();
+            System.out.println(sql);
+            //System.out.println(rs.next());
+
+            return rs.next(); // Returns true if a row exists
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Load all disabled players into a Set (useful if caching is needed)
+    public Set<UUID> getAllDisabledScoreboards() {
+        Set<UUID> disabledPlayers = new HashSet<>();
+        String sql = "SELECT uuid FROM disabled_scoreboards";
+
+        try (Connection conn = DriverManager.getConnection(url1);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                disabledPlayers.add(UUID.fromString(rs.getString("uuid")));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return disabledPlayers;
     }
 
 }

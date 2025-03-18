@@ -291,7 +291,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 }
 
                 // Execute the command on the main server thread
-                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("messaging"), () -> {
+                Bukkit.getScheduler().runTask(arbiter, () -> {
                     ConsoleCommandSender consoleSender = Bukkit.getServer().getConsoleSender();
                     Bukkit.getServer().dispatchCommand(consoleSender, command);
 

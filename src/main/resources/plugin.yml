@@ -18,4 +18,12 @@ commands:
   tempmute:
   unban:
   unmute:
-  punishmentgui:
+  punishments:
+  fly:
+  ranks:
+  setRank:
+  colour:
+  setStaffRank:
+  setPerms:
+  geturl:
+  sidebar:

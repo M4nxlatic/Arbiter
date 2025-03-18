@@ -3,16 +3,21 @@ package com.Manxlatic.arbiter;
 import com.Manxlatic.arbiter.Bot.BotClass;
 import com.Manxlatic.arbiter.Bot.MinecraftListener;
 import com.Manxlatic.arbiter.Bot.SlashCommandListener;
+import com.Manxlatic.arbiter.Managers.NameTagManager;
 import com.Manxlatic.arbiter.Managers.ConfigManager;
 import com.Manxlatic.arbiter.Managers.DbManager;
+import com.Manxlatic.arbiter.Managers.RankManager;
+import com.Manxlatic.arbiter.Ranks.RankListener;
+import com.Manxlatic.arbiter.Ranks.Ranks;
+import com.Manxlatic.arbiter.Ranks.StaffRanks;
 import com.Manxlatic.arbiter.commands.*;
 import com.Manxlatic.arbiter.commands.Punishment.*;
+import com.Manxlatic.arbiter.commands.Ranks.*;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,9 +31,12 @@ public final class Arbiter extends JavaPlugin {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private BotClass botClass;
     private DbManager dbManager;
+    private NameTagManager nameTagManager;
+    private RankManager rankManager;
 
     @Override
     public void onEnable() {
+
 
         getConfigManager().loadConfig();
 
@@ -45,10 +53,17 @@ public final class Arbiter extends JavaPlugin {
 
         dbManager = new DbManager(this);
 
+        nameTagManager = new NameTagManager(this);
+
+        rankManager = new RankManager(this, dbManager);
+
+        SlashCommandListener slashCommandListener = new SlashCommandListener(dbManager, botClass, this);
+        slashCommandListener.startUnbanCheckTask();
 
 
-        getCommand("gmc").setExecutor(new GmcCommand());
-        getCommand("gms").setExecutor(new GmsCommand());
+
+        getCommand("gmc").setExecutor(new GmcCommand(this));
+        getCommand("gms").setExecutor(new GmsCommand(this));
         getCommand("freeze").setExecutor(new FreezeCommand(this));
         getCommand("unfreeze").setExecutor(new UnFreezeCommand(this));
         getCommand("speed").setExecutor(new SpeedCommand());
@@ -60,7 +75,20 @@ public final class Arbiter extends JavaPlugin {
         getCommand("tempmute").setExecutor(new TempMuteCommand(dbManager, this, botClass.getJda()));
         getCommand("unmute").setExecutor(new unmuteCommand(botClass.getJda(), dbManager, this));
         getCommand("unban").setExecutor(new unbanCommand(botClass.getJda(), this, dbManager));
-        getCommand("punishmentgui").setExecutor(new PunishmentGUICommand());
+        getCommand("punishments").setExecutor(new PunishmentGUICommand());
+        getCommand("fly").setExecutor(new FlyCommand(this));
+        getCommand("ranks").setExecutor(new RanksCommand());
+        getCommand("setrank").setExecutor(new SetRankCommand(this));
+        getCommand("setStaffRank").setExecutor(new SetStaffRankCommand(this));
+        getCommand("colour").setExecutor(new ColourCommand());
+        getCommand("sidebar").setExecutor(new SidebarCommand(dbManager, this));
+
+        Ranks.setMain(this);
+        StaffRanks.setMain(this);
+
+
+        Bukkit.getPluginManager().registerEvents(new RankListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new RanksCommand(), this);
 
 
 
@@ -145,5 +173,17 @@ public final class Arbiter extends JavaPlugin {
                 System.err.println("Invalid unmute record: " + record);
             }
         }
+    }
+
+    public DbManager getDbManager() {
+        return dbManager;
+    }
+
+    public NameTagManager getNameTagManager() {
+        return nameTagManager;
+    }
+
+    public RankManager getRankManager() {
+        return rankManager;
     }
 }

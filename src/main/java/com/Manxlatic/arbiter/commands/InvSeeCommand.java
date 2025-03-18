@@ -1,6 +1,7 @@
 package com.Manxlatic.arbiter.commands;
 
 import com.Manxlatic.arbiter.Managers.CustomInventoryBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,10 +20,22 @@ public class InvSeeCommand implements CommandExecutor, Listener {
             return true;
         }
 
+        if (args.length != 1) {
+            sender.sendMessage("Usage: /invsee <player>");
+            return true;
+        }
+
         Player player = (Player) sender;
 
+        Player target = Bukkit.getPlayer(args[0]);
+
+        if (target == null) {
+            sender.sendMessage("Player not found.");
+        }
+
+
         // Create the custom inventory
-        Inventory customInventory = CustomInventoryBuilder.createPlayerInventoryView(player);
+        Inventory customInventory = CustomInventoryBuilder.createPlayerInventoryView(target);
 
         // Open the custom inventory for the player
         player.openInventory(customInventory);

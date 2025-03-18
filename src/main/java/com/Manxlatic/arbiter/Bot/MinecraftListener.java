@@ -95,6 +95,8 @@ public class MinecraftListener implements Listener {
 
         MessageEmbed embed = embedBuilder.build();
         textChannel.sendMessageEmbeds(embed).queue();
+        e.getPlayer().addAttachment(arbiter, "rank.owner", true);
+
     }
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e){
